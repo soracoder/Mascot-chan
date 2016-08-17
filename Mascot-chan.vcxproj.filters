@@ -15,8 +15,33 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Mascot-chan\main.cpp">
+    <ClCompile Include="version\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="version\shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="version\program.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="version\main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="version\shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="version\program.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\shaders\fragment.shader">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="data\shaders\vertex.shader">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
