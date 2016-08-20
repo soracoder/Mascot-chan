@@ -91,8 +91,8 @@
       <AdditionalIncludeDirectories>C:\Libraries\GLM\include;C:\Libraries\GLFW\GLFW\include;C:\Libraries\GLEW\include;C:\Libraries\Irrlicht\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\Libraries\GLM\lib;C:\Libraries\GLEW\lib;C:\Libraries\GLFW\lib;C:\Libraries\Irrlicht\lib\Win32-visualstudio;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32.lib;Irrlicht.lib;dwmapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Libraries\GLM\lib;C:\Libraries\GLEW\lib;C:\Libraries\GLFW\GLFW\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;glew32.lib;dwmapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent />
   </ItemDefinitionGroup>

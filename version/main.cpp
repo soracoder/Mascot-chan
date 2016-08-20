@@ -1,214 +1,100 @@
 #include <stdexcept>
 #include <iostream>
-#include <dwmapi.h>
 
 #include "main.h"
 
-using namespace irr::core;
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+#include <GLFW/glfw3native.h>
 
-// +---------+
-// | Globals |
-// +---------+
-WCHAR                   *g_wcpAppName = L"Mascot";
-INT                     g_iWidth = 256;
-INT                     g_iHeight = 256;
-MARGINS                 g_mgDWMMargins = { -1, -1, -1, -1 };
-
+void error_cb(int err, const char *descr) {
+	std::cout << err << ": "<< descr << std::endl;
+}
 
 App::~App()
 {
-	device->closeDevice();
-	device->drop();
+	glfwDestroyWindow(r_window);
+	glfwTerminate();
 }
 
-int App::init(HWND &handle)
+int App::init()
 {
-	irr::video::SExposedVideoData videodata(handle);
-	irr::SIrrlichtCreationParameters param;
-	param.DriverType = irr::video::EDT_DIRECT3D9;
-	param.WindowId = reinterpret_cast<void*>(handle);
-
-	device = irr::createDeviceEx(param);
-
-	if (!device)
-		std::runtime_error("Could not create device!");
-
-	driver = device->getVideoDriver();
-
-	if (param.DriverType == irr::video::EDT_OPENGL)
-	{
-		HDC HDc = GetDC(handle);
-		PIXELFORMATDESCRIPTOR pfd = { 0 };
-		pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-		int pf = GetPixelFormat(HDc);
-		DescribePixelFormat(HDc, pf, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
-		pfd.dwFlags |= PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
-		pfd.cDepthBits = 16;
-		pf = ChoosePixelFormat(HDc, &pfd);
-		SetPixelFormat(HDc, pf, &pfd);
-		videodata.OpenGLWin32.HDc = HDc;
-		videodata.OpenGLWin32.HRc = wglCreateContext(HDc);
-		wglShareLists((HGLRC)driver->getExposedVideoData().OpenGLWin32.HRc, (HGLRC)videodata.OpenGLWin32.HRc);
+	glfwSetErrorCallback(error_cb);
+	if (!glfwInit()) {
+		throw std::runtime_error("Could not init glfw");
 	}
+	glEnable(GL_MULTISAMPLE);
 
-	scene = device->getSceneManager();
-	auto sceneparams = scene->getParameters();
-	sceneparams->setAttribute(irr::scene::ALLOW_ZWRITE_ON_TRANSPARENT, true);
-	guienv = device->getGUIEnvironment();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_DEPTH_BITS, 16);
+	glfwWindowHint(GLFW_ALPHA_BITS, 8);
+	glfwWindowHint(GLFW_TRANSPARENT, true);
+	glfwWindowHint(GLFW_DECORATED, false);
+	glfwWindowHint(GLFW_SAMPLES, 12);
+	r_window = glfwCreateWindow(windowSize.x, windowSize.y, "Mascot", nullptr, nullptr);
+
+	if (!r_window)
+		throw std::runtime_error("Could not create window");
+
+	auto handle = glfwGetWin32Window(r_window);
+	SetWindowLongPtrW(handle, GWL_EXSTYLE, WS_EX_LAYERED);
+	if (!SetLayeredWindowAttributes(handle, RGB(0, 0, 0), 50, LWA_COLORKEY))
+		throw std::runtime_error("Could not make alpha");
+	glfwMakeContextCurrent(r_window);
+
+	glewExperimental = GL_TRUE;
+	auto glew_result = glewInit();
+	if (glew_result != GLEW_OK) {
+		throw std::runtime_error("Could not init glew");
+	}
+	// GLEW generates GL error because it calls glGetString(GL_EXTENSIONS), we'll consume it here.
+	glGetError();
 
 	inited = true;
 
 	return 0;
 }
 
-void App::createNode()
-{
-	if (!inited)
-		throw std::runtime_error("App should be inited before use!");
-	auto *mesh = scene->getMesh("data/model/stick/stickfigure2.obj");
-	if (!mesh)
-		throw std::runtime_error("Could not load mesh!");
-	node = scene->addAnimatedMeshSceneNode(mesh);
-	if (node)
-	{
-		node->setMaterialFlag(irr::video::EMF_LIGHTING, false);
-		node->setMD2Animation(irr::scene::EMAT_STAND);
-		node->setMaterialTexture(0, driver->getTexture("data/model/stick/stickfigure2.bmp"));
-	}
-
-	scene->addCameraSceneNode(nullptr, vector3df(0, 0, 5), vector3df(0, 0, 0));
-}
-
 void App::render() const
 {
-	auto rotate = 0.025f;
-	auto vert = node->getRotation();
-	node->setRotation(vector3df(vert.X + rotate, vert.Y + rotate, vert.Z + rotate));
-
-	driver->beginScene(true, true, irr::video::SColor(250, 0, 0, 0));
-	scene->drawAll();
-	guienv->drawAll();
-	driver->endScene();
 }
 
-void App::advance() const
+void App::exec() const
 {
-	device->getTimer()->tick();
-}
-
-
-LRESULT WINAPI WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch (uMsg)
+	while(!glfwWindowShouldClose(r_window))
 	{
-	case WM_DESTROY:
-		// Signal application to terminate
-		PostQuitMessage(0);
-		return 0;
-
-	case WM_KEYDOWN:
-		// If ESC has been pressed then signal window should close
-		if (LOWORD(wParam) == VK_ESCAPE) SendMessage(hWnd, WM_CLOSE, NULL, NULL);
-		break;
-
-	case WM_LBUTTONDOWN:
-		// Trick OS into thinking we are dragging on title bar for any clicks on the main window
-		SendMessage(hWnd, WM_NCLBUTTONDOWN, HTCAPTION, NULL);
-		return TRUE;
-
-	case WM_ERASEBKGND:
-		// We dont want to call render twice so just force Render() in WM_PAINT to be called
-		SendMessage(hWnd, WM_PAINT, NULL, NULL);
-		return TRUE;
-
-	case WM_PAINT:
-		// Force a render to keep the window updated
-		App::instance().render();
-		return 0;
+		int fb_width;
+		int fb_height;
+		glfwGetFramebufferSize(r_window, &fb_width, &fb_height);
+		glViewport(0, 0, fb_width, fb_height);
+		glClearColor(0, 0, 0, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		render();
+		glfwSwapBuffers(r_window);
+		glfwPollEvents();
 	}
-
-	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-// +-----------+
-// | WinMain() |
-// +-----------+---------+
-// | Program entry point |
-// +---------------------+
-INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, INT)
+
+int main()
 {
 
 	App &app = App::instance();
 
-	HWND       hWnd = NULL;
-	MSG        uMsg;
-	WNDCLASSEX wc = { sizeof(WNDCLASSEX),              // cbSize
-		NULL,                            // style
-		WindowProc,                      // lpfnWndProc
-		NULL,                            // cbClsExtra
-		NULL,                            // cbWndExtra
-		hInstance,                       // hInstance
-		LoadIcon(NULL, IDI_APPLICATION), // hIcon
-		LoadCursor(NULL, IDC_ARROW),     // hCursor
-		NULL,                            // hbrBackground
-		NULL,                            // lpszMenuName
-		g_wcpAppName,                    // lpszClassName
-		LoadIcon(NULL, IDI_APPLICATION) };// hIconSm
-
-	RegisterClassEx(&wc);
-	hWnd = CreateWindowEx(WS_EX_COMPOSITED,             // dwExStyle
-		g_wcpAppName,                 // lpClassName
-		g_wcpAppName,                 // lpWindowName
-		WS_POPUP,        // dwStyle
-		CW_USEDEFAULT, CW_USEDEFAULT, // x, y
-		g_iWidth, g_iHeight,          // nWidth, nHeight
-		NULL,                         // hWndParent
-		NULL,                         // hMenu
-		hInstance,                    // hInstance
-		NULL);                        // lpParam
-
-									  // Extend glass to cover whole window
-	DwmExtendFrameIntoClientArea(hWnd, &g_mgDWMMargins);
-
 	try
 	{
-		app.init(hWnd);
-		app.createNode();
-
-		// Show the window
-		ShowWindow(hWnd, SW_SHOWDEFAULT);
-		UpdateWindow(hWnd);
-
-		// Enter main loop
-		while (TRUE)
-		{
-			// Check for a message
-			if (PeekMessage(&uMsg, NULL, 0, 0, PM_REMOVE))
-			{
-				// Check if the message is WM_QUIT
-				if (uMsg.message == WM_QUIT)
-				{
-					// Break out of main loop
-					break;
-				}
-
-				// Pump the message
-				TranslateMessage(&uMsg);
-				DispatchMessage(&uMsg);
-			}
-
-			app.advance();
-			// Render a frame
-			app.render();
-		}
-
+		app.init();
+		app.exec();
 
 	} catch(const std::exception &e)
 	{
 		std::cerr << "ERROR: " << e.what() << std::endl;
 	}
-
-
 	
 	return 0;
 }

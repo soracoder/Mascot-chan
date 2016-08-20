@@ -1,6 +1,7 @@
 #pragma once
 
-#include <irrlicht/irrlicht.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <vector>
 #include <memory>
@@ -22,13 +23,11 @@ public:
 	}
 
 
-	int init(HWND& handle);
-
-	void createNode();
+	int init();
 
 	void render() const;
 
-	void advance() const;
+	void exec() const;
 
 	static App& instance()
 	{
@@ -41,17 +40,12 @@ private:
 	virtual ~App();
 
 	static App *inst;
-	irr::IrrlichtDevice *device;
-	irr::video::IVideoDriver *driver;
-	irr::scene::ISceneManager *scene;
-	irr::gui::IGUIEnvironment *guienv;
+	
+	GLFWwindow *r_window;
 
 	glm::vec2 windowSize{ 1040, 780 };
 
 	bool inited = false;
-
-	irr::scene::IAnimatedMeshSceneNode *node;
-
 
 };
 
