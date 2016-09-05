@@ -19,8 +19,6 @@ limitations under the License.
 #include "program.h"
 #include <stdexcept>
 
-using namespace tdogl;
-
 Program::Program(const std::vector<Shader>& shaders) :
 	_object(0)
 {
@@ -59,6 +57,7 @@ Program::Program(const std::vector<Shader>& shaders) :
 		glDeleteProgram(_object); _object = 0;
 		throw std::runtime_error(msg);
 	}
+
 }
 
 Program::~Program() {

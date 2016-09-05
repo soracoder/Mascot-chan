@@ -1,15 +1,17 @@
 #pragma once
-
+#define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <vector>
 #include <memory>
+#include "shader.h"
+#include "program.h"
 
 class App
 {
 public:
-	App() = default;
+	App(){};
 
 	App(const App& other)
 	{
@@ -25,9 +27,7 @@ public:
 
 	int init();
 
-	void render() const;
-
-	void exec() const;
+	void exec();
 
 	static App& instance()
 	{
@@ -35,6 +35,17 @@ public:
 		inst = &tinst;
 		return *inst;
 	}
+
+protected:
+	void preRender();
+	void render() const;
+	void postRender();
+
+	void hittest(glm::vec2 mouse_pos);
+
+	GLuint VBO;
+	GLuint VAO;
+	GLuint EBO;
 
 private:
 	virtual ~App();
@@ -47,6 +58,9 @@ private:
 
 	bool inited = false;
 
+
+	std::vector<Shader> shaders;
+	std::shared_ptr<Program> program;
 };
 
 App* App::inst = nullptr;

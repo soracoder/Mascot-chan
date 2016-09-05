@@ -21,8 +21,6 @@ limitations under the License.
 #include "Shader.h"
 #include <vector>
 
-namespace tdogl {
-
 	/**
 	Represents an OpenGL program made by linking shaders.
 	*/
@@ -66,5 +64,3 @@ namespace tdogl {
 		Program(const Program&);
 		const Program& operator=(const Program&);
 	};
-
-}

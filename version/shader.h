@@ -18,10 +18,9 @@ limitations under the License.
 
 #pragma once
 
-#include <GL/glew.h>
 #include <string>
-
-namespace tdogl {
+#define GLEW_STATIC
+#include <GL/glew.h>
 
 	/**
 	Represents a compiled OpenGL shader.
@@ -71,5 +70,3 @@ namespace tdogl {
 		void _retain();
 		void _release();
 	};
-
-}

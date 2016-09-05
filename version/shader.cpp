@@ -23,8 +23,6 @@ limitations under the License.
 #include <cassert>
 #include <sstream>
 
-using namespace tdogl;
-
 Shader::Shader(const std::string& shaderCode, GLenum shaderType) :
 	_object(0),
 	_refCount(NULL)
