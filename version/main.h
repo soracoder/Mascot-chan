@@ -8,6 +8,12 @@
 #include "shader.h"
 #include "program.h"
 
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+#include <GLFW/glfw3native.h>
+
+LRESULT CALLBACK winProc(HWND handle, UINT uMsg, WPARAM param, LPARAM lparam);
+
 class App
 {
 public:
@@ -41,7 +47,7 @@ protected:
 	void render() const;
 	void postRender();
 
-	void hittest(glm::vec2 mouse_pos);
+	bool hittest();
 
 	GLuint VBO;
 	GLuint VAO;
@@ -61,6 +67,8 @@ private:
 
 	std::vector<Shader> shaders;
 	std::shared_ptr<Program> program;
+
+	friend LRESULT CALLBACK winProc(HWND handle, UINT uMsg, WPARAM param, LPARAM lparam);
 };
 
 App* App::inst = nullptr;

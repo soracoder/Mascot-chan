@@ -3,12 +3,28 @@
 
 #include "main.h"
 
-#define GLFW_EXPOSE_NATIVE_WIN32
-#define GLFW_EXPOSE_NATIVE_WGL
-#include <GLFW/glfw3native.h>
-
 void error_cb(int err, const char *descr) {
 	std::cout << err << ": "<< descr << std::endl;
+}
+
+WNDPROC prevWinProc;
+
+LRESULT CALLBACK winProc(HWND handle, UINT uMsg, WPARAM param, LPARAM lparam)
+{
+	switch(uMsg)
+	{
+	case WM_NCHITTEST:
+
+		auto ht = HTNOWHERE;
+		if (App::instance().hittest())
+		{
+			ht = HTCLIENT;
+		}
+
+		return HTCAPTION;
+	}
+
+	return CallWindowProcW(prevWinProc, handle, uMsg, param, lparam);
 }
 
 App::~App()
@@ -40,6 +56,9 @@ int App::init()
 		throw std::runtime_error("Could not create window");
 
 	auto handle = glfwGetWin32Window(r_window);
+	prevWinProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(handle, GWL_WNDPROC, reinterpret_cast<LONG_PTR>(&winProc)));
+	SetWindowLongPtrW(handle, GWL_EXSTYLE, WS_EX_TRANSPARENT | WS_EX_TOPMOST);
+
 	glfwMakeContextCurrent(r_window);
 
 	glewExperimental = GL_TRUE;
@@ -111,9 +130,9 @@ void App::postRender()
 {
 }
 
-void App::hittest(glm::vec2 mouse_pos)
+bool App::hittest()
 {
-	auto handle = glfwGetWin32Window(r_window);
+	return false;
 
 }
 

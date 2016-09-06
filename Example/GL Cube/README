@@ -1,0 +1,41 @@
+Cube Demo by Corey Tabaka (me@coreytabaka.com)
+
+This is a cool little demo showing off arbitrarily shaped windows, defined by
+3D geometry. It took a bit of work, since Windows doesn't really allow mixing
+OpenGL and transparent window drawing. I wrote this demo mainly because a lot
+of people said it couldn't be done cleanly (and to add to my resume).
+
+
+Requirements
+
+Windows 2000/XP
+Graphics accelerator supporting WGL_ARB_pbuffer and WGL_ARB_pixel_format
+
+
+Optional
+
+Graphics accelerator supporting ARB_fragment_program and ARB_vertex_program
+
+If support for these extensions is found, the demo will load lighting.cg and
+lightingfrag.cg and use them for per pixel lighting.
+
+
+Testing
+
+I have only tested on GeForce Quadro FX 3000, GeForce FX 5200, GeFroce2,
+ATI Mobility Radeon 7500, and a newer Mobil Intel chip that I have forgotten.
+All seem to work fine. The GeForce FXs are the onyl cards supporting ARB vp/fp
+that I have had a chance to test with. I would like to try a nice ATI card
+sometime, when I get the chance.
+
+
+Distribution
+
+This demo is copyright (c) Corey Tabaka 2004. Permission is granted to use
+this demo free of charge for personal use and in review of my portfolio. This
+demo may be directly distributed between friends, coworkers, etc..., provided
+that the contents of this distribution remain wholly intact and unmodified. 
+This demo may not be distributed by any other means. However, links can be made
+to the root of coreytabaka.com. No warranty is provided of any kind and all 
+responsibility for any damages caused by the use or misuse of the program is
+disclaimed.

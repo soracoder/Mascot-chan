@@ -1,0 +1,58 @@
+// matrix.cg - simple cg vertex shader
+struct appin {
+	float4 pos		: POSITION;
+	float4 color	: COLOR;
+	float4 normal	: NORMAL;
+	float4 uv		: TEXCOORD0;
+};
+
+struct vertout {
+	float4 hpos		: POSITION;
+	float4 color	: COLOR;
+
+	// lighting
+	float3 pos		: TEXCOORD0;
+	float3 normal	: TEXCOORD1;
+	float3 lightPos	: TEXCOORD2;
+	float3 lightVec : TEXCOORD3;
+
+	// material
+	float4 ambient	: TEXCOORD4;
+	float4 diffuse	: TEXCOORD5;
+	float4 specular : TEXCOORD6;
+	float4 emission : TEXCOORD7;
+};
+
+vertout main(appin IN) {
+	vertout OUT;
+	
+	// pass the input color through
+	OUT.color = IN.color;
+
+	// or override it for fun
+	//OUT.color = float4(0.3, 0.6, 1.0, 0.7);
+	
+	// transform to clip space
+	OUT.hpos = mul(glstate.matrix.mvp, IN.pos);
+	
+	// transform to eye space
+	float3 pos = mul(glstate.matrix.modelview[0], IN.pos).xyz;
+	OUT.pos = pos;
+	
+	// transform normal to eye space, but defer normalization to fragment shader
+	OUT.normal = mul((float3x3) glstate.matrix.invtrans.modelview[0], IN.normal.xyz);
+	
+	// the light position is already in eye space
+	float3 lightPos = glstate.light[0].position.xyz;
+	OUT.lightPos = lightPos;
+
+	// calculate the light vector, defer normalization also
+	OUT.lightVec = lightPos - pos;
+
+	// pass on the material to the fragment shader
+	OUT.ambient = glstate.material.front.ambient;
+	OUT.diffuse = glstate.material.front.diffuse;
+	OUT.specular = glstate.material.front.specular;
+
+	return OUT;
+}	
