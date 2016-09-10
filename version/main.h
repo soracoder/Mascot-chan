@@ -21,8 +21,38 @@
 LRESULT CALLBACK winProc(HWND handle, UINT uMsg, WPARAM param, LPARAM lparam);
 LRESULT CALLBACK LLMouseHook(const int n_code, const WPARAM w_param, const LPARAM l_param);
 
+struct DebugInfo
+{
+	glm::vec2 mouse_position = glm::vec2();
+};
+
+struct Mouse
+{
+	class Ray
+	{
+		glm::vec3 origin;
+		glm::vec3 direction;
+
+	public:
+		glm::vec3 getOrigin();
+		glm::vec3 getDirection();
+	};
+
+	glm::vec2 position = glm::vec2();
+	Ray ray;
+
+	bool inside = false;
+};
+
 class App
 {
+
+	enum WindowStatus
+	{
+		visible,
+		invisible
+	};
+
 public:
 	App(){};
 
@@ -49,6 +79,8 @@ public:
 		return *inst;
 	}
 
+	Mouse mouse;
+
 protected:
 	void preRender();
 	void render() const;
@@ -65,7 +97,7 @@ protected:
 
 private:
 	virtual ~App();
-	bool systemHit(const int x, const int y);
+	bool systemHit();
 
 	static App *inst;
 	
@@ -75,7 +107,7 @@ private:
 	glm::vec2 window_size{ 1040, 780 };
 
 	bool inited = false;
-	bool system_visible = false; // model hittest
+	WindowStatus window_status = invisible;
 
 	std::vector<Shader> shaders;
 	std::shared_ptr<Program> program;
@@ -85,3 +117,21 @@ private:
 };
 
 App* App::inst = nullptr;
+
+struct Vertex
+{
+	glm::vec3 position;
+	glm::vec3 normal;
+	glm::vec3 tex_coords;
+};
+
+struct Texture
+{
+	GLuint id;
+	std::string type;
+};
+
+
+
+
+

@@ -23,6 +23,8 @@ void error_cb(int err, const char *descr) {
 
 HHOOK hhook{ nullptr };
 
+DebugInfo debug_info;
+
 LRESULT CALLBACK LLMouseHook(const int n_code, const WPARAM w_param, const LPARAM l_param)
 {
 	switch(w_param)
@@ -30,7 +32,16 @@ LRESULT CALLBACK LLMouseHook(const int n_code, const WPARAM w_param, const LPARA
 	case WM_MOUSEMOVE:
 		POINT p;
 		GetCursorPos(&p);
-		App::instance().systemHit(p.x, p.y);
+
+		auto &app = App::instance();
+
+		if (!ScreenToClient(app.rhandle, &p))
+			std::cerr << "Failed converting point to client-area coordinates" << std::endl;
+
+		app.mouse.position.x = p.x;
+		app.mouse.position.y = p.y;
+
+		App::instance().systemHit();
 		break;
 	}
 
@@ -49,13 +60,46 @@ App::~App()
 	glfwTerminate();
 }
 
-bool App::systemHit(const int x, const int y)
+bool App::systemHit()
 {
-	return true;
-	// hit test here
-	if (x > 404 && x < 639 && y > 368 && y < 580)
+	auto x = mouse.position.x;
+	auto y = mouse.position.y;
+
+	// check if mouse in window
+	mouse.inside = (x >= 0 && x <= window_size.x && y >= 0 && y <= window_size.y);
+
+	if (mouse.inside)
 	{
-		SetWindowLongPtrW(rhandle, GWL_EXSTYLE, WS_EX_LAYERED | WS_EX_TOPMOST); // to make it invisible to mouse events
+		// normalize mouse coords
+		auto n_x = (2.0f * x) / window_size.x - 1.0f;
+		auto n_y = 1.0f - (2.0f * y) / window_size.y;
+	
+		auto ray_clip = glm::vec4(n_x, n_y, -1.0, 1.0);
+
+		// from clip space to eye space
+		auto ray_eye = glm::inverse(projection) * ray_clip;
+		// make a vector not a point
+		ray_eye.z = -1.0;
+		ray_eye.w = 0.0;
+
+		// from eye_space to world space
+		auto ray_world = glm::vec3(glm::inverse(view) * ray_eye);
+		// normalise vector
+		ray_world = glm::normalize(ray_world);
+
+		//std::cout << "Vector3( " << ray_world.x << " , " << ray_world.y << " , " << ray_world.z << " )" << std::endl;;
+		
+		std::cout << "Inside" << std::endl;
+	} 
+	else
+	{
+		std::cout << "Outside" << std::endl;
+	}
+
+
+	if (window_status == visible)
+	{
+		SetWindowLongPtrW(rhandle, GWL_EXSTYLE, WS_EX_LAYERED | WS_EX_TOPMOST); // to make it visible to mouse events
 		std::cout << "visible!" << std::endl;
 	}
 	else
@@ -120,6 +164,8 @@ int App::init()
 	program = std::make_shared<Program>(shaders);
 
 	inited = true;
+
+	glfwSetWindowPos(r_window, 500, 200);
 
 	return 0;
 }
